@@ -326,12 +326,159 @@ body {
     box-shadow: 0 0 20px rgba(96, 165, 250, 0.5);
 }
 
+
 /* About Section */
 .about {
     padding: 5rem 0;
     background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
     position: relative;
 }
+
+/* Resume Section */
+.resume {
+    padding: 5rem 0;
+    background: linear-gradient(135deg, #0a0a0a 0%, #0f0f23 100%);
+    position: relative;
+}
+
+.resume::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="resume-dots" width="25" height="25" patternUnits="userSpaceOnUse"><circle cx="12.5" cy="12.5" r="1" fill="rgba(96,165,250,0.08)"/></pattern></defs><rect width="100" height="100" fill="url(%23resume-dots)"/></svg>');
+    opacity: 0.3;
+}
+
+.resume-content {
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+}
+
+.resume-info {
+    background: rgba(96, 165, 250, 0.03);
+    padding: 3rem;
+    border-radius: 20px;
+    border: 1px solid rgba(96, 165, 250, 0.1);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.resume-info::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(96, 165, 250, 0.05), transparent);
+    transition: left 0.5s;
+}
+
+.resume-info:hover::before {
+    left: 100%;
+}
+
+.resume-info:hover {
+    transform: translateY(-5px);
+    border-color: rgba(96, 165, 250, 0.3);
+    box-shadow: 0 20px 40px rgba(96, 165, 250, 0.15);
+}
+
+.resume-info h3 {
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: #f8fafc;
+    text-align: center;
+}
+
+.resume-info > p {
+    font-size: 1.1rem;
+    color: #cbd5e1;
+    line-height: 1.8;
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.resume-features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: rgba(96, 165, 250, 0.05);
+    border: 1px solid rgba(96, 165, 250, 0.1);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.feature-item:hover {
+    transform: translateX(8px);
+    background: rgba(96, 165, 250, 0.1);
+    border-color: rgba(96, 165, 250, 0.3);
+}
+
+.feature-item i {
+    font-size: 1.25rem;
+    color: #10b981;
+    flex-shrink: 0;
+}
+
+.feature-item span {
+    color: #cbd5e1;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.resume-meta {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.last-updated {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    font-style: italic;
+    padding: 0.5rem 1rem;
+    background: rgba(96, 165, 250, 0.05);
+    border: 1px solid rgba(96, 165, 250, 0.1);
+    border-radius: 20px;
+    display: inline-block;
+}
+
+.resume-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.resume-actions .btn {
+    min-width: 180px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.resume-actions .btn i {
+    margin-right: 0.5rem;
+}
+
+/* Skills Section */
 
 .about::before {
     content: '';
@@ -702,6 +849,7 @@ body {
     font-size: 1.25rem;
 }
 
+
 .contact-form {
     background: rgba(96, 165, 250, 0.03);
     padding: 2rem;
@@ -712,12 +860,21 @@ body {
 
 .form-group {
     margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #cbd5e1;
+    font-size: 0.9rem;
 }
 
 .form-group input,
 .form-group textarea {
     width: 100%;
-    padding: 1rem;
+    padding: 1rem 1rem 1rem 3rem;
     background: rgba(96, 165, 250, 0.05);
     border: 2px solid rgba(96, 165, 250, 0.1);
     border-radius: 8px;
@@ -725,6 +882,7 @@ body {
     transition: all 0.3s ease;
     font-family: inherit;
     color: #f8fafc;
+    position: relative;
 }
 
 .form-group input::placeholder,
@@ -743,6 +901,165 @@ body {
 .form-group textarea {
     resize: vertical;
     min-height: 120px;
+}
+
+/* Enhanced validation styles */
+.form-group input.valid,
+.form-group textarea.valid {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.05);
+}
+
+.form-group input.invalid,
+.form-group textarea.invalid {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.05);
+}
+
+/* Validation icons */
+.validation-icon {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.form-group input:valid:not(:placeholder-shown) + .validation-icon,
+.form-group textarea:valid:not(:placeholder-shown) + .validation-icon {
+    opacity: 1;
+    color: #10b981;
+}
+
+.form-group input.invalid + .validation-icon,
+.form-group textarea.invalid + .validation-icon {
+    opacity: 1;
+    color: #ef4444;
+}
+
+.form-group input:valid:not(:placeholder-shown) + .validation-icon::before {
+    content: '✓';
+}
+
+.form-group input.invalid + .validation-icon::before,
+.form-group textarea.invalid + .validation-icon::before {
+    content: '✗';
+}
+
+/* Error messages */
+.error-message {
+    color: #ef4444;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+}
+
+.error-message.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Character counter */
+.char-counter {
+    text-align: right;
+    font-size: 0.875rem;
+    color: #64748b;
+    margin-top: 0.5rem;
+}
+
+.char-counter.warning {
+    color: #f59e0b;
+}
+
+.char-counter.danger {
+    color: #ef4444;
+}
+
+/* Button loading state */
+#submitBtn {
+    position: relative;
+    overflow: hidden;
+}
+
+#submitBtn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.btn-loading {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-text,
+.btn-loading {
+    transition: opacity 0.3s ease;
+}
+
+/* Form status messages */
+.form-status {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+}
+
+.form-status.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.form-status.success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.form-status.error {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.form-status.loading {
+    background: rgba(96, 165, 250, 0.1);
+    color: #60a5fa;
+    border: 1px solid rgba(96, 165, 250, 0.3);
+}
+
+/* Honeypot styling */
+.honeypot {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .contact-form {
+        padding: 1.5rem;
+    }
+    
+    .form-group input,
+    .form-group textarea {
+        padding: 0.875rem 0.875rem 0.875rem 2.5rem;
+    }
+    
+    .validation-icon {
+        right: 0.875rem;
+        font-size: 1rem;
+    }
 }
 
 /* Footer */
@@ -803,6 +1120,7 @@ body {
         grid-template-columns: 1fr;
     }
 
+
     .contact-content {
         grid-template-columns: 1fr;
         gap: 2rem;
@@ -810,6 +1128,20 @@ body {
 
     .skills-grid {
         grid-template-columns: 1fr;
+    }
+
+    .resume-features {
+        grid-template-columns: 1fr;
+    }
+
+    .resume-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .resume-actions .btn {
+        width: 100%;
+        max-width: 250px;
     }
 
     .projects-grid {
@@ -855,9 +1187,11 @@ body {
     }
 }
 
+
 .hero-content,
 .hero-image,
 .about-content,
+.resume-content,
 .skill-category,
 .project-card {
     animation: fadeInUp 0.8s ease-out;

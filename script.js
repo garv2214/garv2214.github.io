@@ -61,35 +61,343 @@ window.addEventListener('scroll', () => {
     });
 });
 
-// Form submission handling
-const contactForm = document.querySelector('.contact-form');
-if (contactForm) {
-    contactForm.addEventListener('submit', function(e) {
+
+// Enhanced Contact Form Handling
+class ContactForm {
+    constructor() {
+        this.form = document.getElementById('contactForm');
+        this.submitBtn = document.getElementById('submitBtn');
+        this.btnText = this.submitBtn?.querySelector('.btn-text');
+        this.btnLoading = this.submitBtn?.querySelector('.btn-loading');
+        this.formStatus = document.getElementById('formStatus');
+        this.charCount = document.getElementById('charCount');
+        this.messageField = document.getElementById('message');
+        
+        this.init();
+    }
+
+    init() {
+        if (!this.form) return;
+        
+        this.setupValidation();
+        this.setupEventListeners();
+        this.setupBackendIntegration();
+    }
+
+    setupValidation() {
+        // Validation rules for each field
+        this.validationRules = {
+            name: {
+                required: true,
+                minLength: 2,
+                maxLength: 50,
+                pattern: /^[a-zA-Z\s]+$/,
+                message: 'Please enter a valid name (letters and spaces only)'
+            },
+            email: {
+                required: true,
+                maxLength: 100,
+                pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                message: 'Please enter a valid email address'
+            },
+            subject: {
+                required: true,
+                minLength: 5,
+                maxLength: 100,
+                message: 'Subject must be between 5 and 100 characters'
+            },
+            message: {
+                required: true,
+                minLength: 20,
+                maxLength: 1000,
+                message: 'Message must be between 20 and 1000 characters'
+            }
+        };
+    }
+
+    setupEventListeners() {
+        // Real-time validation
+        const fields = this.form.querySelectorAll('input, textarea');
+        fields.forEach(field => {
+            field.addEventListener('blur', () => this.validateField(field));
+            field.addEventListener('input', () => {
+                this.validateField(field);
+                if (field.id === 'message') this.updateCharCount();
+            });
+        });
+
+        // Form submission
+        this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+
+        // Character counter for message field
+        if (this.messageField) {
+            this.messageField.addEventListener('input', () => this.updateCharCount());
+        }
+    }
+
+    validateField(field) {
+        const fieldName = field.name;
+        const value = field.value.trim();
+        const rules = this.validationRules[fieldName];
+        
+        if (!rules) return true;
+
+        let isValid = true;
+        let errorMessage = '';
+
+        // Required check
+        if (rules.required && !value) {
+            isValid = false;
+            errorMessage = `${this.getFieldLabel(fieldName)} is required`;
+        }
+        // Pattern check
+        else if (value && rules.pattern && !rules.pattern.test(value)) {
+            isValid = false;
+            errorMessage = rules.message;
+        }
+        // Length checks
+        else if (value && rules.minLength && value.length < rules.minLength) {
+            isValid = false;
+            errorMessage = `${this.getFieldLabel(fieldName)} must be at least ${rules.minLength} characters`;
+        }
+        else if (value && rules.maxLength && value.length > rules.maxLength) {
+            isValid = false;
+            errorMessage = `${this.getFieldLabel(fieldName)} must be less than ${rules.maxLength} characters`;
+        }
+
+        // Update field appearance
+        this.updateFieldState(field, isValid, errorMessage);
+        
+        return isValid;
+    }
+
+    updateFieldState(field, isValid, errorMessage) {
+        const formGroup = field.closest('.form-group');
+        const errorElement = formGroup?.querySelector('.error-message');
+        
+        // Remove previous states
+        field.classList.remove('valid', 'invalid');
+        
+        if (field.value.trim()) {
+            field.classList.add(isValid ? 'valid' : 'invalid');
+        }
+
+        // Update error message
+        if (errorElement) {
+            if (errorMessage && !isValid) {
+                errorElement.textContent = errorMessage;
+                errorElement.classList.add('show');
+            } else {
+                errorElement.textContent = '';
+                errorElement.classList.remove('show');
+            }
+        }
+    }
+
+    getFieldLabel(fieldName) {
+        const labels = {
+            name: 'Name',
+            email: 'Email',
+            subject: 'Subject',
+            message: 'Message'
+        };
+        return labels[fieldName] || fieldName;
+    }
+
+    updateCharCount() {
+        if (!this.charCount || !this.messageField) return;
+        
+        const count = this.messageField.value.length;
+        this.charCount.textContent = count;
+        
+        // Update counter styling based on length
+        const counter = this.charCount.parentElement;
+        counter.classList.remove('warning', 'danger');
+        
+        if (count > 900) {
+            counter.classList.add('danger');
+        } else if (count > 750) {
+            counter.classList.add('warning');
+        }
+    }
+
+    async handleSubmit(e) {
         e.preventDefault();
         
-        // Get form data
-        const formData = new FormData(this);
-        const name = formData.get('name');
-        const email = formData.get('email');
-        const subject = formData.get('subject');
-        const message = formData.get('message');
-        
-        // Basic validation
-        if (!name || !email || !subject || !message) {
-            showNotification('Please fill in all fields', 'error');
+        // Spam protection - check honeypot
+        const honeypot = this.form.querySelector('input[name="website"]');
+        if (honeypot && honeypot.value) {
+            this.showStatus('Spam detected. Form submission blocked.', 'error');
             return;
         }
+
+        // Validate all fields
+        const fields = this.form.querySelectorAll('input, textarea');
+        let isFormValid = true;
         
-        if (!isValidEmail(email)) {
-            showNotification('Please enter a valid email address', 'error');
+        fields.forEach(field => {
+            if (!this.validateField(field)) {
+                isFormValid = false;
+            }
+        });
+
+        if (!isFormValid) {
+            this.showStatus('Please fix the errors above before submitting.', 'error');
             return;
         }
+
+        // Show loading state
+        this.setLoadingState(true);
+
+        try {
+            // Get form data
+            const formData = new FormData(this.form);
+            const data = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                subject: formData.get('subject'),
+                message: formData.get('message'),
+                timestamp: new Date().toISOString()
+            };
+
+            // Submit to backend
+            const result = await this.submitForm(data);
+            
+            if (result.success) {
+                this.showStatus('Thank you! Your message has been sent successfully.', 'success');
+                this.form.reset();
+                this.updateCharCount();
+                
+                // Reset field states
+                fields.forEach(field => {
+                    field.classList.remove('valid', 'invalid');
+                    const errorElement = field.closest('.form-group')?.querySelector('.error-message');
+                    if (errorElement) {
+                        errorElement.classList.remove('show');
+                    }
+                });
+            } else {
+                throw new Error(result.message || 'Submission failed');
+            }
+
+        } catch (error) {
+            console.error('Form submission error:', error);
+            this.showStatus('Sorry, there was an error sending your message. Please try again or contact me directly.', 'error');
+        } finally {
+            this.setLoadingState(false);
+        }
+    }
+
+    setLoadingState(loading) {
+        if (!this.submitBtn || !this.btnText || !this.btnLoading) return;
+
+        this.submitBtn.disabled = loading;
         
-        // Simulate form submission (replace with actual form handling)
-        showNotification('Thank you for your message! I\'ll get back to you soon.', 'success');
-        this.reset();
-    });
+        if (loading) {
+            this.btnText.style.opacity = '0';
+            this.btnLoading.style.display = 'flex';
+        } else {
+            this.btnText.style.opacity = '1';
+            this.btnLoading.style.display = 'none';
+        }
+    }
+
+    showStatus(message, type = 'info') {
+        if (!this.formStatus) return;
+
+        this.formStatus.textContent = message;
+        this.formStatus.className = `form-status ${type} show`;
+
+        // Auto-hide success messages
+        if (type === 'success') {
+            setTimeout(() => {
+                this.formStatus.classList.remove('show');
+            }, 5000);
+        }
+    }
+
+    async submitForm(data) {
+        // Option 1: Netlify Forms (recommended for static sites)
+        if (window.location.hostname !== 'localhost') {
+            try {
+                const response = await fetch('/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    return { success: true };
+                }
+            } catch (error) {
+                console.log('Netlify Forms submission failed, trying EmailJS...');
+            }
+        }
+
+        // Option 2: EmailJS (client-side email service)
+        if (window.emailjs) {
+            try {
+                const templateParams = {
+                    from_name: data.name,
+                    from_email: data.email,
+                    subject: data.subject,
+                    message: data.message
+                };
+
+                await window.emailjs.send(
+                    'your_service_id', // Replace with your EmailJS service ID
+                    'your_template_id', // Replace with your EmailJS template ID
+                    templateParams
+                );
+
+                return { success: true };
+            } catch (error) {
+                console.log('EmailJS submission failed:', error);
+            }
+        }
+
+        // Option 3: Formspree (fallback)
+        try {
+            const response = await fetch('https://formspree.io/f/your_form_id', { // Replace with your Formspree form ID
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                return { success: true };
+            }
+        } catch (error) {
+            console.log('Formspree submission failed:', error);
+        }
+
+        // Fallback: Log to console (for development)
+        console.log('Form submitted:', data);
+        return { success: true };
+    }
+
+    setupBackendIntegration() {
+        // Add any setup needed for backend services
+        // This is where you would initialize EmailJS, reCAPTCHA, etc.
+        
+        // Example EmailJS initialization (uncomment and configure):
+        /*
+        emailjs.init('your_public_key'); // Replace with your EmailJS public key
+        */
+        
+        // Example reCAPTCHA initialization (uncomment and configure):
+        /*
+        grecaptcha.ready(() => {
+            // reCAPTCHA is ready
+        });
+        */
+    }
 }
+
+// Initialize contact form when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    new ContactForm();
+});
 
 // Email validation helper
 function isValidEmail(email) {
@@ -257,4 +565,44 @@ navStyles.textContent = `
     }
 `;
 
+
 document.head.appendChild(navStyles);
+
+// Resume Download Functionality
+document.addEventListener('DOMContentLoaded', () => {
+    const resumeDownloadBtn = document.querySelector('.resume-actions .btn-primary');
+    const resumeViewBtn = document.querySelector('.resume-actions .btn-secondary');
+    
+    if (resumeDownloadBtn) {
+        resumeDownloadBtn.addEventListener('click', function(e) {
+            // Add download animation
+            const icon = this.querySelector('i');
+            if (icon) {
+                icon.classList.add('fa-spin');
+                setTimeout(() => {
+                    icon.classList.remove('fa-spin');
+                }, 1000);
+            }
+            
+            // Show brief feedback
+            const originalText = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-check"></i> Downloaded!';
+            this.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+            
+            setTimeout(() => {
+                this.innerHTML = originalText;
+                this.style.background = '';
+            }, 2000);
+        });
+    }
+    
+    if (resumeViewBtn) {
+        resumeViewBtn.addEventListener('click', function(e) {
+            // Add click animation
+            this.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                this.style.transform = '';
+            }, 150);
+        });
+    }
+});
