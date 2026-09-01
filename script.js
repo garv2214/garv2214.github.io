@@ -317,63 +317,35 @@ class ContactForm {
     }
 
     async submitForm(data) {
-        // Option 1: Netlify Forms (recommended for static sites)
-        if (window.location.hostname !== 'localhost') {
-            try {
-                const response = await fetch('/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                
-                if (response.ok) {
-                    return { success: true };
-                }
-            } catch (error) {
-                console.log('Netlify Forms submission failed, trying EmailJS...');
-            }
-        }
-
-        // Option 2: EmailJS (client-side email service)
-        if (window.emailjs) {
-            try {
-                const templateParams = {
-                    from_name: data.name,
-                    from_email: data.email,
-                    subject: data.subject,
-                    message: data.message
-                };
-
-                await window.emailjs.send(
-                    'your_service_id', // Replace with your EmailJS service ID
-                    'your_template_id', // Replace with your EmailJS template ID
-                    templateParams
-                );
-
-                return { success: true };
-            } catch (error) {
-                console.log('EmailJS submission failed:', error);
-            }
-        }
-
-        // Option 3: Formspree (fallback)
         try {
-            const response = await fetch('https://formspree.io/f/your_form_id', { // Replace with your Formspree form ID
+            const response = await fetch('https://formsubmit.co/ajax/garv6375@gmail.com', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: data.name,
+                    email: data.email,
+                    _subject: `[Portfolio Inquiry] ${data.subject}`,
+                    message: data.message,
+                    _template: 'table'
+                })
             });
 
             if (response.ok) {
-                return { success: true };
+                const result = await response.json();
+                if (result.success === 'true' || result.success === true || result.message) {
+                    return { success: true };
+                }
             }
+            throw new Error('Form submission service error');
         } catch (error) {
-            console.log('Formspree submission failed:', error);
+            console.warn('Direct API submission error, falling back to mail client:', error);
+            // Fallback: open mail client pre-filled with the message
+            window.location.href = `mailto:garv6375@gmail.com?subject=${encodeURIComponent(data.subject)}&body=${encodeURIComponent(`Name: ${data.name}\nEmail: ${data.email}\n\nMessage:\n${data.message}`)}`;
+            return { success: true };
         }
-
-        // Fallback: Log to console (for development)
-        console.log('Form submitted:', data);
-        return { success: true };
     }
 
     setupBackendIntegration() {
